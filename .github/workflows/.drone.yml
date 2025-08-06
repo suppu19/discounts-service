@@ -1,56 +1,38 @@
-name: Trigger Datadog Synthetic Tests by Tag
- 
+name: CI/CD Pipeline
+
 on:
-  workflow_dispatch:  # Manual trigger
   push:
     branches:
       - main
- 
-jobs:
-  trigger-tests:
-    runs-on: ubuntu-latest
- 
-    env:
-      DATADOG_API_KEY: 9216667f1ebc992fa6365e06b0417998
-      DATADOG_APP_KEY: a0f906a5bf21eecc58098cca5f7e5803eae5903c
-      DATADOG_PUBLIC_ID: nqf-mix-ndf
-      TEST_TAG: "CI/CD"  # Only set the tag name here
- 
-    steps:
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
- 
-      - name: Fetch and trigger tests by tag
-        run: |
-          echo "Finding Datadog tests with tag: $TEST_TAG"
- 
-          # Get all tests
-          tests=$(curl -s -X GET "https://api.datadoghq.com/api/v1/synthetics/tests" \
-            -H "DD-API-KEY: $DD_API_KEY" \
-            -H "DD-APPLICATION-KEY: $DD_APP_KEY")
- 
-          # Extract public_ids of tests that contain the tag
-          test_ids=$(echo "$tests" | jq -r --arg TAG "$TEST_TAG" '.tests[] | select(.tags | index($TAG)) | .public_id')
- 
-          if [ -z "$test_ids" ]; then
-            echo "No tests found with tag: $TEST_TAG"
-            exit 0
-          fi
- 
-          echo "Found tests:"
-          echo "$test_ids"
- 
-          # Trigger each test in parallel
-          for id in $test_ids; do
-            echo "Triggering test with ID: $id"
-            curl -s -X POST "https://api.datadoghq.com/api/v1/synthetics/tests/trigger/ci" \
-              -H "Accept: application/json" \
-              -H "Content-Type: application/json" \
-              -H "DD-API-KEY: $DD_API_KEY" \
-              -H "DD-APPLICATION-KEY: $DD_APP_KEY" \
-              -d "{\"tests\":[{\"public_id\":\"$id\"}]}" &
-          done
- 
-          wait
-          echo "All matching tests triggered."
+  workflow_dispatch:
 
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # This step would be for building your Docker image, like in the lab.
+      # You can uncomment and modify this based on your Dockerfile and needs.
+      # - name: Build Docker image
+      #   run: docker build -t discounts-service .
+      #
+      # - name: Deploy to Staging
+      #   run: echo "Deploying to staging environment..."
+      
+      - name: Run Datadog Synthetic test
+        uses: DataDog/synthetics-ci-github-action@v2
+        with:
+          # Use GitHub Secrets to store your Datadog keys securely
+          api_key: ${{ secrets.DATADOG_API_KEY }}
+          app_key: ${{ secrets.DATADOG_APP_KEY }}
+          
+          # Use the public ID of the specific test you want to run.
+          # You can define this as a repository secret or just hardcode it here
+          # since it is not sensitive.
+          public_ids: 'nqf-mix-ndf'
+          
+          # Optional: Specify your Datadog site (e.g., datadoghq.eu, us3.datadoghq.com)
+          # datadog_site: 'us5.datadoghq.com'
