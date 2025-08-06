@@ -12,8 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build Docker image
-        run: docker build -t discounts-service .
+
 
       - name: Deploy to Staging
         # In a real-world scenario, this would be a step to deploy to a staging server.
@@ -31,8 +30,7 @@ jobs:
           DATADOG_APP_KEY: a0f906a5bf21eecc58098cca5f7e5803eae5903c
           DATADOG_PUBLIC_ID: nqf-mix-ndf
           # You would also need to specify the staging environment URL
-          # DATADOG_SITE: "us5.datadoghq.com" # or your specific Datadog site
-
+          DATADOG_SITE: app.datadoghq.com 
       - name: Deploy to Production
         # This step would run only if the previous synthetic test passes.
         # This is a key feature of CI/CD and is handled automatically by GitHub Actions.
