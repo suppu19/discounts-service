@@ -1,0 +1,23 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Run Datadog Synthetic test
+        uses: DataDog/synthetics-ci-github-action@v2.1.0
+        with:
+          api_key: '9216667f1ebc992fa6365e06b0417998'
+          app_key: 'a0f906a5bf21eecc58098cca5f7e5803eae5903c'
+          public_ids: 'vrg-7dh-s9p'
+          datadog_site: 'datadoghq.com'
